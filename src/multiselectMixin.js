@@ -8,12 +8,12 @@ function not (fun) {
   return (...params) => !fun(...params)
 }
 
-function includes (str, query, ignoreDiacritics) {
+function includes (str, query, strictSearch) {
   /* istanbul ignore else */
   if (str === undefined) str = 'undefined'
   if (str === null) str = 'null'
   if (str === false) str = 'false'
-  const text = ignoreDiacritics ? str.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : str.toString().toLowerCase()
+  const text = strictSearch ? str.toString().toLowerCase() : str.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
   return text.indexOf(query.trim()) !== -1
 }
 
@@ -48,7 +48,7 @@ function filterGroups (search, label, values, groupLabel, customLabel) {
         console.warn(`Options passed to vue-multiselect do not contain groups, despite the config.`)
         return []
       }
-      const groupOptions = filterOptions(group[values], search, label, customLabel, this.internalSearchIgnoreDiacritics)
+      const groupOptions = filterOptions(group[values], search, label, customLabel, this.strictSearch)
 
       return groupOptions.length
         ? {
@@ -84,7 +84,7 @@ export default {
      * Decide whether to normalize diacritics in internal search.
      * @type {Boolean}
      */
-    internalSearchIgnoreDiacritics: {
+    strictSearch: {
       type: Boolean,
       default: false
     },
@@ -346,7 +346,7 @@ export default {
     },
     filteredOptions () {
       const search = this.search || ''
-      const normalizedSearch = this.internalSearchIgnoreDiacritics ? search.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '') : search.toLowerCase().trim()
+      const normalizedSearch = this.strictSearch ? search.toLowerCase().trim() : search.toLowerCase().trim().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
 
       let options = this.options.concat()
 
@@ -354,7 +354,7 @@ export default {
       if (this.internalSearch) {
         options = this.groupValues
           ? this.filterAndFlat(options, normalizedSearch, this.label)
-          : filterOptions(options, normalizedSearch, this.label, this.customLabel, this.internalSearchIgnoreDiacritics)
+          : filterOptions(options, normalizedSearch, this.label, this.customLabel, this.strictSearch)
       } else {
         options = this.groupValues ? flattenOptions(this.groupValues, this.groupLabel)(options) : options
       }
